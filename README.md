@@ -23,8 +23,8 @@ Python 3 is required to run the code for this project.
 ## Installation Instructions
 
 1. Clone this repository to your local machine.
-2. Install the required dependencies using the command: `pip install -r requirements.txt`.
-3. Run the main code using the command: `python main.py -i your_session.csv`.
+2. Install the required dependencies using the command: `pip install -r requirements.txt`
+3. Run the main code using the command: `python main.py -s -k`
 
 ## Usage
 

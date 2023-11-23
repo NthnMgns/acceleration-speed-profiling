@@ -34,20 +34,20 @@ class Regression():
     def intensity_max_identification(self) -> pd.DataFrame:
         """Identification des points à maximum intensité selon la méthode de JB Morin"""
         # ID des intervals dv
-        self.points.loc[:, "dv"] = self.points.speed // self.dv
+        self.points.loc[:, "dv"] = self.points.Speed // self.dv
         # Plus grandes valeurs d'accélération par interval
-        self.points.loc[:, "rank_accel_dv"] = self.points.groupby(['Player', 'dv']).accel.rank(method = 'dense', ascending = False)
+        self.points.loc[:, "rank_Acceleration_dv"] = self.points.groupby(['Player', 'dv']).Acceleration.rank(method = 'dense', ascending = False)
         # Points à intensité maximal
-        high_intensity_points = self.points[self.points.rank_accel_dv <= self.n_max]
+        high_intensity_points = self.points[self.points.rank_Acceleration_dv <= self.n_max]
 
         # LE point à intensité maximal
-        high_intensity_points.loc[:, "max_accel"] = high_intensity_points.groupby(['Player']).accel.transform('max')
-        max_speed_at_max_accel = high_intensity_points.query('accel == max_accel').groupby(['Player']).speed.max()
-        max_speed_at_max_accel = pd.DataFrame(max_speed_at_max_accel.values, columns = ['max_speed_at_max_accel'], index = max_speed_at_max_accel.index)
+        high_intensity_points.loc[:, "max_Acceleration"] = high_intensity_points.groupby(['Player']).Acceleration.transform('max')
+        max_Speed_at_max_Acceleration = high_intensity_points.query('Acceleration == max_Acceleration').groupby(['Player']).Speed.max()
+        max_Speed_at_max_Acceleration = pd.DataFrame(max_Speed_at_max_Acceleration.values, columns = ['max_Speed_at_max_Acceleration'], index = max_Speed_at_max_Acceleration.index)
 
         # La regression se fera uniquement sur les points de vitesse supérieur à ce dernier point
-        high_intensity_points = high_intensity_points.merge(max_speed_at_max_accel, on = 'Player')
-        high_intensity_points = high_intensity_points.query('speed >= max_speed_at_max_accel')
+        high_intensity_points = high_intensity_points.merge(max_Speed_at_max_Acceleration, on = 'Player')
+        high_intensity_points = high_intensity_points.query('Speed >= max_Speed_at_max_Acceleration')
         self.high_intensity_points = high_intensity_points.copy()
         return high_intensity_points
     
@@ -66,8 +66,8 @@ class Regression():
     
     def group_linear_regression(self, df):
         """Régression linéaire à exécuter dans un groupby"""
-        y = df[['accel']]
-        X = df[['speed']]
+        y = df[['Acceleration']]
+        X = df[['Speed']]
         linear_regression = LinearRegression().fit(X, y)
         if linear_regression.score(X, y) <= 0.5 :
             player = df.player.unique()[0]
@@ -87,17 +87,17 @@ class Regression():
             plt.figure()
         
             # Plot des données brutes
-            plt.scatter(player_points.speed, player_points.accel, alpha = 0.5, s = 20)
+            plt.scatter(player_points.Speed, player_points.Acceleration, alpha = 0.5, s = 20)
             
             # Points en rouge les points à haute intensité
             if not player_high_intensity.empty :
-                plt.scatter(player_high_intensity.speed, player_high_intensity.accel, alpha = 1, s = 20, c = "red")
+                plt.scatter(player_high_intensity.Speed, player_high_intensity.Acceleration, alpha = 1, s = 20, c = "red")
             else : 
                 raise ValueError("Des points à haute intensité doivent être identifiés.")
             
             # Point vert pour la valeur de puissance maximale liberée
-            Amax = player_high_intensity.max_accel.iloc[0]
-            Vmax = player_high_intensity.max_speed_at_max_accel.iloc[0]
+            Amax = player_high_intensity.max_Acceleration.iloc[0]
+            Vmax = player_high_intensity.max_Speed_at_max_Acceleration.iloc[0]
             plt.scatter(Vmax, Amax, alpha = 1, s = 50, c = "green")
 
             # Trace droite
@@ -127,7 +127,7 @@ class Regression():
         
     def group_quantile_regression(self, df):
         """Régression quantile à exécuter dans un groupby"""
-        model = smf.quantreg('accel ~ speed', df[['speed', 'accel']].astype(float))
+        model = smf.quantreg('Acceleration ~ Speed', df[['Speed', 'Acceleration']].astype(float))
         quantiles = np.arange(.05, .96, .01)
         models = pd.DataFrame([self.model_fit(q, model) for q in quantiles], columns=['q', 'a0', 'b'])
         models.loc[:, "s0"] = - models.a0 / models.b
@@ -135,7 +135,7 @@ class Regression():
     
     def model_fit(self, q, model):
         results = model.fit(q = q)
-        return q, results.params['Intercept'], results.params['speed']
+        return q, results.params['Intercept'], results.params['Speed']
     
     def compute_quantile_a0_s0(self):
         # Valeurs intéressantes
@@ -157,17 +157,17 @@ class Regression():
             plt.figure()
         
             # Plot des données brutes
-            plt.scatter(player_points.speed, player_points.accel, alpha = 0.5, s = 20)
+            plt.scatter(player_points.Speed, player_points.Acceleration, alpha = 0.5, s = 20)
             
             # Points en rouge les points à haute intensité
             if not player_high_intensity.empty :
-                plt.scatter(player_high_intensity.speed, player_high_intensity.accel, alpha = 1, s = 20, c = "red")
+                plt.scatter(player_high_intensity.Speed, player_high_intensity.Acceleration, alpha = 1, s = 20, c = "red")
             else : 
                 raise ValueError("Des points à haute intensité doivent être identifiés.")
             
             # Point vert pour la valeur de puissance maximale liberée
-            Amax = player_high_intensity.max_accel.iloc[0]
-            Vmax = player_high_intensity.max_speed_at_max_accel.iloc[0]
+            Amax = player_high_intensity.max_Acceleration.iloc[0]
+            Vmax = player_high_intensity.max_Speed_at_max_Acceleration.iloc[0]
             plt.scatter(Vmax, Amax, alpha = 1, s = 50, c = "green")
 
             # Trace multiples droites

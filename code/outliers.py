@@ -13,24 +13,6 @@ from sklearn.cluster import DBSCAN
 import warnings
 warnings.filterwarnings("ignore")
 
-
-
-### -------------------- Variables numeriques ---------------------------- ###
-# Distance maximale entre deux points pour les considerer comme voisins
-# profil joueur
-eps_DBSCAN = 0.5
-# profil seance
-#eps_DBSCAN = 0.6
-# Nombre minimal de voisins pour dire que l'observation est coeur
-# profil joueur
-# neighb_DBSCAN = 4
-# profil seance
-neighb_DBSCAN = 3
-# Nombre d'outliers minimale pour supprimer une journée entière
-nb_outlier = 10
-
-
-
 class Outliers():
     """
     Objet identifiant les erreurs de mesure et de mauvaise utilisation.
@@ -50,14 +32,14 @@ class Outliers():
         self.eps_DBSCAN = eps_DBSCAN
 
         # Suppression des valeurs négatives (inutiles ici)
-        self.correct_points = points[(points.accel >= 0)]
+        self.correct_points = points[(points.Acceleration >= 0)]
 
     def misuse_error_identification(self) -> pd.DataFrame :
         """Identification des erreurs de mauvaises utilisations.
         10.93 - 10.93/10.5 * vitesse : mean + 3 * std (cf papier)."""
         # Identification
-        outliers = self.correct_points[(self.correct_points.accel >= 0) & (self.correct_points.accel >= 10.93 - 10.93/10.5 * self.correct_points.speed)]
-        outliers.loc[:, 'n_error'] = outliers.groupby(['Player', 'Date']).speed.transform('count')
+        outliers = self.correct_points[(self.correct_points.Acceleration >= 0) & (self.correct_points.Acceleration >= 10.93 - 10.93/10.5 * self.correct_points.Speed)]
+        outliers.loc[:, 'n_error'] = outliers.groupby(['Player', 'Date']).Speed.transform('count')
         outliers = outliers[outliers.n_error >= self.nb_outlier]
 
         # Suppression des outliers dans la base
@@ -72,7 +54,7 @@ class Outliers():
         """Identification des erreurs de mesure. Le DBSCAN permet d'isoler les points qui sont physiquement trop loin des autres pour correspondre à une trajectoire plausible."""
         # Identification des erreurs de mesures
         # Pour réduire le temps de calcul, on conserve uniquement les points intéressants pour le DBSCAN 
-        players_sample = self.correct_points[self.correct_points.accel >= 5 - self.correct_points.speed] 
+        players_sample = self.correct_points[self.correct_points.Acceleration >= 5 - self.correct_points.Speed] 
         
         # Verification si l'échantillon d'intérêt est vide
         if players_sample.empty :
@@ -92,7 +74,7 @@ class Outliers():
     
     def DBSCAN_clustering(self, df : pd.DataFrame):
         """Mise en forme de l'algorithme de DBSCAN pour l'intégrer à un groupby."""
-        clustering = DBSCAN(eps=self.eps_DBSCAN, min_samples=self.neighb_DBSCAN).fit(df[["speed", "accel"]])
+        clustering = DBSCAN(eps=self.eps_DBSCAN, min_samples=self.neighb_DBSCAN).fit(df[["Speed", "Acceleration"]])
         return pd.Series(clustering.labels_, index = df.index)
 
     def plot(self, file_name : str, display : bool = False) -> None:
@@ -107,15 +89,15 @@ class Outliers():
             plt.figure()
         
             # Plot des données brutes avec les outliers detectés
-            plt.scatter(player_correct_points.speed, player_correct_points.accel, alpha = 0.5, s = 20)
+            plt.scatter(player_correct_points.Speed, player_correct_points.Acceleration, alpha = 0.5, s = 20)
             
             # Points en rouge pour les outliers d'utilisation
             if not player_measurement_error.empty :
-                plt.scatter(player_measurement_error.speed, player_measurement_error.accel, alpha = 1, s = 20, c = "red")
+                plt.scatter(player_measurement_error.Speed, player_measurement_error.Acceleration, alpha = 1, s = 20, c = "red")
         
             # Points en noir pour les outliers de mesure
             if not player_misuse_error.empty :
-                plt.scatter(player_misuse_error.speed, player_misuse_error.accel, alpha = 1, s = 20, c = "black")
+                plt.scatter(player_misuse_error.Speed, player_misuse_error.Acceleration, alpha = 1, s = 20, c = "black")
                 
             plt.xlabel('Vitesse (m/s)')
             plt.ylabel('Accélération (m/s²)')

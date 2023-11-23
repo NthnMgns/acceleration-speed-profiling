@@ -9,74 +9,110 @@ import sys
 import os
 sys.path.insert(0, os.getcwd() + '/code')
 
-from datetime import datetime
 from code.outliers import Outliers
 from code.regression import Regression
 import pandas as pd
-from matplotlib import pyplot as plt
+import argparse
 
 
-nom_fichier = '...'
-display = False
+if __name__ == "__main__":
 
-###################################################################################
-# -------------------- Import et trasnformation d'un fichier -------------------- #
-###################################################################################
+    # ---------------------- Parse Arguments ---------------------------- #
 
-df_seance = pd.read_csv(f"data/{nom_fichier}.csv", parse_dates=['formatted local time'], sep = ';')
+    parser = argparse.ArgumentParser(
+        prog="Speed-Acceleration Profiling",
+        description="Speed-Acceleration Profiling",
+        argument_default=False)
 
-# Transformation du fichier pour qu'il réponde au format attendu.
-df_seance = df_seance.rename(columns = {'formatted local time' : 'Heure', 'full name' : 'Player', 'speed in m/s' : 'speed', 'acceleration in m/s2' : 'accel'})
-df_seance = df_seance.dropna(subset=['accel', 'speed'])
+    parser.add_argument(
+        "-f", "--filename", 
+        help="Select a csv file in data folder", 
+        type=str)
+    
+    parser.add_argument('-s','--convert_speed', action="store_true", help="Apply speed conversion from km/h to m/s.")
+    parser.add_argument('-k','--keep_acceleration', action="store_true", help="Use acceleration in csv file")
+    
+    parser.add_argument("--dv", type =float, help="Small speed range in max intensity identification.")
+    parser.add_argument("--n_max", type =int, help="Numbers of points by small speed range in max intensity identification.")
 
-# Conversion en type numérique
-try : 
-    df_seance.loc[:, 'speed'] = pd.to_numeric(df_seance.speed) 
-    df_seance.loc[:, 'accel'] = pd.to_numeric(df_seance.accel)
-except : 
-    df_seance.loc[:, 'speed'] = pd.to_numeric(df_seance.speed.str.replace(',', '.').astype(float))
-    df_seance.loc[:, 'accel'] = pd.to_numeric(df_seance.accel.str.replace(',', '.').astype(float))
+    args = parser.parse_args()
+    filename, convert_speed, keep_acceleration = args.filename, args.convert_speed, args.keep_acceleration
+    dv, n_max = args.dv, args.n_max
 
-# La date est nécessaire pour la suite
-df_seance.loc[:, 'Date'] = df_seance.Heure.dt.date
-# Si calcul de l'accélération il est nécessaire d'ordonner le fichier
-df_seance = df_seance.sort_values(by = ['Player', 'Heure'])
 
-# Recalcul de l'accélération ? 
-# - Kinexon LPS : Qualité suffisante de l'accélération 
-# - GPS Catapult : Résultats de l'IMU nécessite un recalcul de l'accélération
-#df_seance["accel"] = (df_seance.speed - df_seance.speed.shift(1))/((df_seance.Heure - df_seance.Heure.shift(1)).dt.total_seconds())
+    # ---------------------- Default Arguments ---------------------------- #
 
-###################################################################################
-# ------------------------------- Quelques tests -------------------------------- #
-###################################################################################
+    sep = ','
+    filename = filename if filename else 'Session_example'
+    convert_speed = convert_speed if convert_speed else False 
+    keep_acceleration = keep_acceleration if keep_acceleration else False
 
-for column in ['Date', 'speed', 'accel', 'Player', 'Heure'] :
-    assert column in df_seance.columns.tolist(), "Des colonnes essentielles au déroullement du code sont manquantes."
-assert df_seance.speed.quantile(0.99) <= 10, "Les données de vitesse sont probablement en km/h. Merci de les convertir en m/s."
+    display = False
+    save_plot_outliers = True
+    save_plot_linear_regression = False
+    save_plot_quantile_regression = True
 
-###################################################################################
-# -------------------- Profil Accélération Vitesse In Situ -------------------- #
-###################################################################################
+    dv = dv if dv else 0.3
+    n_max = n_max if n_max else 2
 
-# Outliers
-outliers = Outliers(df_seance)
-outliers.misuse_error_identification()
-outliers.measurement_error_identification()
-#outliers.plot(nom_fichier, display=display)
+    # -------------------- File Loading -------------------- #
 
-# Régressions - Étape 1
-regression = Regression(outliers.correct_points)
-regression.intensity_max_identification()
+    df_session = pd.read_csv(f"data/{filename}.csv", parse_dates=['Timestamp'], sep = sep)
+    df_session = df_session.dropna(subset=['Acceleration', 'Speed'])
 
-# Régression linéaire classique (JB Morin)
-regression.regression_lineaire()
-#regression.plot_linear(nom_fichier, display=display)
+    # Conversion en type numérique
+    try : 
+        df_session.loc[:, 'Speed'] = pd.to_numeric(df_session.Speed) 
+        df_session.loc[:, 'Acceleration'] = pd.to_numeric(df_session.Acceleration)
+    except : 
+        df_session.loc[:, 'Speed'] = pd.to_numeric(df_session.Speed.str.replace(',', '.').astype(float))
+        df_session.loc[:, 'Acceleration'] = pd.to_numeric(df_session.Acceleration.str.replace(',', '.').astype(float))
 
-# Régression quantile (N Miguens)
-regression.regression_quantile()
-regression.plot_quantile(nom_fichier, display = display)
+    # Km/h to m/s ? 
+    if convert_speed :
+        df_session.loc[:, 'Speed'] = df_session.Speed / 3.6
 
-# On enregistre les résultats 
-regression.save(nom_fichier)
+    # La date est nécessaire pour la suite
+    if not 'Date' in df_session.columns :
+        df_session.loc[:, 'Date'] = df_session.Timestamp.dt.date
+
+    # Si calcul de l'accélération il est nécessaire d'ordonner le fichier
+    df_session = df_session.sort_values(by = ['Player', 'Timestamp'])
+
+    # Recalcul de l'accélération ? 
+    if not keep_acceleration :
+        df_session["Acceleration"] = (df_session.Speed - df_session.Speed.shift(1))/((df_session.Timestamp - df_session.Timestamp.shift(1)).dt.total_seconds())
+
+
+    # ------------------------------- Tests -------------------------------- #
+
+    for column in ['Date', 'Speed', 'Acceleration', 'Player', 'Timestamp'] :
+        assert column in df_session.columns.tolist(), "Des colonnes essentielles au déroullement du code sont manquantes."
+
+    assert df_session.Speed.quantile(0.99) <= 10, "Les données de vitesse sont probablement en km/h. Merci de les convertir en m/s."
+
+    # -------------------- In-Situ Speed-Acceleration Profiling -------------------- #
+    # Outliers
+    outliers = Outliers(df_session)
+    outliers.misuse_error_identification()
+    outliers.measurement_error_identification()
+    if save_plot_outliers :
+        outliers.plot(filename, display = display)
+
+    # Régressions - Étape 1
+    regression = Regression(outliers.correct_points, dv=dv, n_max=n_max)
+    regression.intensity_max_identification()
+
+    # Régression linéaire classique (JB Morin)
+    regression.regression_lineaire()
+    if save_plot_linear_regression :
+        regression.plot_linear(filename, display=display)
+
+    # Régression quantile (N Miguens)
+    regression.regression_quantile()
+    if save_plot_quantile_regression :
+        regression.plot_quantile(filename, display = display)
+
+    # On enregistre les résultats 
+    regression.save(filename)
 
