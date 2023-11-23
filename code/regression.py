@@ -110,8 +110,8 @@ class Regression():
             plt.figtext(0.8, 0.4, f's0 = {s0:.2f} m/s', ha="center", color = 'red', fontsize=10, bbox={"facecolor":"white", "alpha":0.5, "pad":5})
     
             # Axes et titre du graph
-            plt.xlabel('Vitesse (m/s)')
-            plt.ylabel('Accélération (m/s²)')
+            plt.xlabel('Speed (m/s)')
+            plt.ylabel('Acceleration (m/s²)')
             plt.xlim([0,11])
             plt.ylim([0,11])
             plt.title(f"Régression linéaire : {player}")
@@ -191,11 +191,11 @@ class Regression():
             plt.figtext(0.8, 0.4, f's0 = {s0:.2f} ± {std_s0:.2f} m/s', ha="center", color = 'red', fontsize=10, bbox={"facecolor":"white", "alpha":0.5, "pad":5})
 
             # Axes et titre du graph
-            plt.xlabel('Vitesse (m/s)')
-            plt.ylabel('Accélération (m/s²)')
+            plt.xlabel('Speed (m/s)')
+            plt.ylabel('Acceleration (m/s²)')
             plt.xlim([0,11])
             plt.ylim([0,11])
-            plt.title(f"Régression quantile : {player}")
+            plt.title(f"Acceleration - Speed Profil : {player}")
             plt.savefig(f"./results/images/{file_name + '_' + player}_Quantile_Regression.png")
             if display :
                 plt.show()   

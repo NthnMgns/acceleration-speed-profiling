@@ -99,8 +99,8 @@ class Outliers():
             if not player_misuse_error.empty :
                 plt.scatter(player_misuse_error.Speed, player_misuse_error.Acceleration, alpha = 1, s = 20, c = "black")
                 
-            plt.xlabel('Vitesse (m/s)')
-            plt.ylabel('Accélération (m/s²)')
+            plt.xlabel('Speed (m/s)')
+            plt.ylabel('Acceleration (m/s²)')
             plt.xlim([0,11])
             plt.ylim([0,11])
             plt.title(f"Outliers : {player}")

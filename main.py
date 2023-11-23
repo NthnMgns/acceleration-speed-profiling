@@ -58,6 +58,9 @@ if __name__ == "__main__":
     # -------------------- File Loading -------------------- #
 
     df_session = pd.read_csv(f"data/{filename}.csv", parse_dates=['Timestamp'], sep = sep)
+    
+    if not "Acceleration" in df_session.columns :
+        df_session.loc[:, 'Acceleration'] = 0
     df_session = df_session.dropna(subset=['Acceleration', 'Speed'])
 
     # Conversion en type numérique

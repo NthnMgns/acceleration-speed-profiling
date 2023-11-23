@@ -12,9 +12,9 @@ Recently a [proof-of-concept](https://doi.org/10.1016/j.jbiomech.2021.110524) wa
 
 1. **/data**: This directory contains a dataset for testing the code and providing an example of the expected file. 
 
-2. **/code**: This directory contains the source code associated with the research. The code is divided into separate modules for easier understanding: *outliers* to identify outliers and *regression* to calculate AV profiles.
+2. **/code**: This directory contains the source code associated with the research. The code is divided into separate modules for easier understanding: *outliers* to identify outliers and *regression* to calculate AS profiles.
 
-3. **/results**: This directory contains the results produced by the code: a csv file containing the characteristic values of the AV profiles by player and possibly by training exercise; point cloud images for each player and training exercise.
+3. **/results**: This directory contains the results produced by the code: a csv file containing the characteristic values of the AS profiles by player and possibly by training exercise; point cloud images for each player and training exercise.
 
 ## Requirements
 
@@ -26,13 +26,52 @@ Python 3 is required to run the code for this project.
 2. Install the required dependencies using the command: `pip install -r requirements.txt`
 3. Run the main code using the command: `python main.py -s -k`
 
+A dockerfile is also available.
 ## Usage
 
-> TODO : Explain how to use the code or reproduce the research results using your project.
+### Arguments
 
-## Key Results
+- The `-f` or `--filename` argument is used to select a csv file in data folder.
+  ```bash
+  python main.py --filename Session_example
+  ```
+- The `-s` argument is used to convert speed in km/h to m/s.
+  ```bash
+  python main.py -s 
+  ```
+- The `-k` argument is used to keep acceleration values from csv file.
+  ```bash
+  python main.py -k 
+  ```
+- The `--dv` argument is used to define the small speed range in max intensity identification.
+  ```bash
+  python main.py --dv 0.3
+  ```
+- The `--n_max` argument is used to define the numbers of points by small speed range in max intensity identification.
+  ```bash
+  python main.py --n_max 2
+  ```
 
-> TODO : Include information on key results presented in the paper. This may include tables, charts, or other visual data.
+### Input file - Requirements
+
+| Player  | Speed |  Timestamp  |
+|---------|-------|-------------|
+| Adrien  | 4.27  | 12:45:59.0  |
+| Adrien  | 4.38  | 12:45:59.1  |
+| Adrien  | 4.57  | 12:45:59.2  |
+
+'Acceleration' and 'Date' can also be added.
+## Results
+### CSV results
+| Player | a0 : Regression quantile | std_a0 | s0 : Regression quantile | std_s0 |
+|----------|-----|---------|-------------| ---- |
+| Adrien  | 5.57  |  0.31 | 8.20  |1.00 |
+| Franck  | 7.01  | 0.35  | 9.32  |1.20 |
+| Loic    | 6.42  |  0.19  | 7.52  |0.54|
+
+### Image results 
+
+![Acceleration-Speed Profiling](results/images/Session_example_Adrien_Quantile_Regression.png "Acceleration-Speed Profil of Adrien")
 
 ## Contributing
 
