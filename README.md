@@ -6,7 +6,7 @@ This project accompanies the research paper titled [*Individual in-situ GPS-deri
 
 ## Overview
 
-Recently a [proof-of-concept]((https://doi.org/10.1016/j.jbiomech.2021.110524)) was proposed to derive the soccer players’ individual in-situ acceleration-speed (AS) profile from global positioning system (GPS) data collected over several sessions. The present study aimed to validate an automatized method of individual GPS-derived in-situ AS profiling in professional rugby union setting.
+Recently a [proof-of-concept](https://doi.org/10.1016/j.jbiomech.2021.110524) was proposed to derive the soccer players’ individual in-situ acceleration-speed (AS) profile from global positioning system (GPS) data collected over several sessions. The present study aimed to validate an automatized method of individual GPS-derived in-situ AS profiling in professional rugby union setting.
 
 ## Project Contents
 
