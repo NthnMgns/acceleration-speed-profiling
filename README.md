@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This project accompanies the research paper titled [*Individual in-situ GPS-derived acceleration-speed profiling: towards automatization and refinement*](https://dx.doi.org/10.21203/rs.3.rs-3251516/v1) under-reviewed in the journal *Sports Medecine-Open* by [N. Miguens](https://www.linkedin.com/in/nathan-miguens-543118176/).
+This project accompanies the research paper titled [*Individual in-situ GPS-derived acceleration-speed profiling: towards automatization and refinement*](https://dx.doi.org/10.21203/rs.3.rs-3251516/v1) published in the journal *Sports Medecine-Open* by [N. Miguens](https://www.linkedin.com/in/nathan-miguens-543118176/).
 
 ## Overview
 
