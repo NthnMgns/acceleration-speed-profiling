@@ -43,12 +43,12 @@ class Outliers():
         outliers = outliers[outliers.n_error >= self.nb_outlier]
 
         # Suppression des outliers dans la base
-        outliers_index = outliers.index
-        self.correct_points = self.correct_points[~self.correct_points.index.isin(outliers_index)]
+        outliers_Date = outliers.reset_index().Date.unique()
+        self.correct_points = self.correct_points[~self.correct_points.Date.isin(outliers_Date)]
 
         # Sauvegarde de ces points
         self.misuse_error = outliers.copy()
-        return outliers
+        return self.correct_points[self.correct_points.Date.isin(outliers_Date)]
 
     def measurement_error_identification(self) -> pd.DataFrame :
         """Identification des erreurs de mesure. Le DBSCAN permet d'isoler les points qui sont physiquement trop loin des autres pour correspondre à une trajectoire plausible."""
@@ -81,23 +81,24 @@ class Outliers():
         """Trace le nuage de points comprenant les deux types d'outliers (noir et rouge) et les données propres (bleu)."""
         for player in self.players :
 
-            player_correct_points = self.correct_points[self.correct_points.Player == player]
-            player_measurement_error = self.measurement_error[self.measurement_error.Player == player]
-            player_misuse_error = self.misuse_error[self.misuse_error.Player == player]
-
             # Nouvelle figure
             plt.figure()
-        
+
             # Plot des données brutes avec les outliers detectés
+            player_correct_points = self.correct_points[self.correct_points.Player == player]
             plt.scatter(player_correct_points.Speed, player_correct_points.Acceleration, alpha = 0.5, s = 20)
             
             # Points en rouge pour les outliers d'utilisation
-            if not player_measurement_error.empty :
-                plt.scatter(player_measurement_error.Speed, player_measurement_error.Acceleration, alpha = 1, s = 20, c = "red")
+            if not self.measurement_error.empty :
+                player_measurement_error = self.measurement_error[self.measurement_error.Player == player]
+                if not player_measurement_error.empty :
+                    plt.scatter(player_measurement_error.Speed, player_measurement_error.Acceleration, alpha = 1, s = 20, c = "red")
         
-            # Points en noir pour les outliers de mesure
-            if not player_misuse_error.empty :
-                plt.scatter(player_misuse_error.Speed, player_misuse_error.Acceleration, alpha = 1, s = 20, c = "black")
+            # Points en noir pour les outliers de mesure 
+            if not self.misuse_error.empty :
+                player_misuse_error = self.misuse_error[self.misuse_error.Player == player]
+                if not player_misuse_error.empty :
+                    plt.scatter(player_misuse_error.Speed, player_misuse_error.Acceleration, alpha = 1, s = 20, c = "black")
                 
             plt.xlabel('Speed (m/s)')
             plt.ylabel('Acceleration (m/s²)')
