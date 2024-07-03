@@ -70,7 +70,7 @@ class Regression():
         X = df[['Speed']]
         linear_regression = LinearRegression().fit(X, y)
         if linear_regression.score(X, y) <= 0.5 :
-            player = df.player.unique()[0]
+            player = df.Player.unique()[0]
             warnings.warn(f"La regression linéaire du joueur {player} n'est pas de qualité. Veuillez vérifier les données")
             return LinearRegression()
         return linear_regression
